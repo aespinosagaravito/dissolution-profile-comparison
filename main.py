@@ -120,9 +120,7 @@ async def run_analysis_with_agents(inputs: Dict[str, any]) -> Dict[str, any]:
             method=inputs["method_key"],
             ref_file=inputs["upload_ref"],
             test_file=inputs["upload_test"],
-            metadata=metadata,
-            ref_label=f"Referencia (Lote {inputs['reference_lot']})",
-            test_label=f"Test (Lote {inputs['test_lot']})"
+            metadata=metadata
         )
         
         return results

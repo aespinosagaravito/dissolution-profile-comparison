@@ -245,8 +245,7 @@ class AgentOrchestrator:
         method: str,
         ref_file,
         test_file,
-        metadata: Dict[str, str],
-        **kwargs
+        metadata: Dict[str, str]
     ) -> Dict[str, Any]:
         """Execute complete dissolution comparison analysis using agents.
         
@@ -255,7 +254,6 @@ class AgentOrchestrator:
             ref_file: Reference file
             test_file: Test file
             metadata: Report metadata
-            **kwargs: Additional parameters
             
         Returns:
             Complete analysis results
@@ -286,8 +284,7 @@ class AgentOrchestrator:
             test_sd=test_sd,
             ref_label=f"Referencia (Lote {metadata.get('Lote referencia', 'N/A')})",
             test_label=f"Test (Lote {metadata.get('Lote test', 'N/A')})",
-            title="Perfil de disolución",
-            **kwargs
+            title="Perfil de disolución"
         )
         
         if viz_result.status == AgentStatus.FAILED:
@@ -309,7 +306,7 @@ class AgentOrchestrator:
             )
         elif method == "model_dependent":
             self.logger.info("Running model-dependent analysis...")
-            model_name = kwargs.get("model_name", "weibull")
+            model_name = "weibull"  # Default model
             analysis_result = await self.agents["model_dependent_analyzer"].execute(
                 ref_units=data["ref_units"],
                 test_units=data["test_units"],
