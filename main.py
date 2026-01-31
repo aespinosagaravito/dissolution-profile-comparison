@@ -282,12 +282,21 @@ def main() -> None:
                     
                     # Render downloads if available
                     if results["reports"]:
+                        # Extract tables and figures from agent results
+                        report_tables = results.get("data", {}).get("overview", pd.DataFrame())
+                        if isinstance(report_tables, pd.DataFrame):
+                            report_tables = {"Resumen por tiempo": report_tables}
+                        
+                        report_figs = results.get("visualization", {}).get("profile_plot_bytes", {})
+                        if report_figs:
+                            report_figs = {"Perfil de disolución (media ± DE)": report_figs}
+                        
                         render_download_buttons(
-                            metadata={},  # Would be passed from agent results
+                            metadata=results.get("metadata", {}),
                             method_name=inputs["method_display"],
                             conclusion=results["analysis"]["conclusion"] if results["analysis"] else "No conclusion",
-                            report_tables={},
-                            report_figs={},
+                            report_tables=report_tables,
+                            report_figs=report_figs,
                             ref_label=inputs["reference_lot"],
                             test_label=inputs["test_lot"]
                         )

@@ -130,6 +130,10 @@ def build_excel_report(tables: Dict[str, pd.DataFrame]) -> bytes:
     Returns:
         Excel file as bytes
     """
+    if not tables:
+        # Create a default empty table if no tables provided
+        tables = {"Sin datos": pd.DataFrame({"Mensaje": ["No hay datos disponibles para exportar"]})}
+    
     buf = io.BytesIO()
     with pd.ExcelWriter(buf, engine="openpyxl") as writer:
         for sheet_name, df in tables.items():

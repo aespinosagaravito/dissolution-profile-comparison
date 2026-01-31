@@ -274,6 +274,14 @@ class AgentOrchestrator:
         ref_sd = data["ref_units"].std(axis=0, ddof=1)
         test_sd = data["test_units"].std(axis=0, ddof=1)
         
+        # Add overview to data for reporting
+        from data.processor import calculate_summary_stats
+        overview = calculate_summary_stats(
+            data["ref_units"], data["test_units"], data["time_points"],
+            metadata.get('Lote referencia', 'Ref'), metadata.get('Lote test', 'Test')
+        )
+        data["overview"] = overview
+        
         # Step 2: Generate visualization
         self.logger.info("Generating visualization...")
         viz_result = await self.agents["visualizer"].execute(
@@ -344,6 +352,7 @@ class AgentOrchestrator:
             "analysis": analysis_result.data if analysis_result else None,
             "visualization": viz_result.data if viz_result.status == AgentStatus.COMPLETED else None,
             "reports": report_result.data if report_result.status == AgentStatus.COMPLETED else None,
+            "metadata": metadata,
             "execution_summary": self._get_execution_summary()
         }
     
