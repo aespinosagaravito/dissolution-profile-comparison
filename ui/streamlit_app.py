@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-import streamlit as st
+from pathlib import Path
+from typing import Dict
+
 import numpy as np
 import pandas as pd
+import streamlit as st
 from scipy.optimize import curve_fit
-from typing import Dict
 
 from config.constants import (
     METHODS, MODELS, METHOD_HELP, GENERAL_CONDITIONS,
@@ -28,6 +30,176 @@ from reporting.generator import (
     build_pdf_report, build_excel_report, create_metadata_dict,
     generate_filename
 )
+
+# --- Visual identity (corporate palette & theming) ---
+PRIMARY = "#009688"
+PRIMARY_DARK = "#007c70"
+NAVY = "#0c2c6a"
+BORDER = "#d7e3ea"
+
+CUSTOM_CSS = f"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap');
+
+:root {{
+    --primary: {PRIMARY};
+    --primary-dark: {PRIMARY_DARK};
+    --navy: {NAVY};
+    --border: {BORDER};
+}}
+
+* {{
+    font-family: 'Poppins', 'Manrope', 'Segoe UI', sans-serif;
+}}
+
+html, body, .stApp {{
+    background: linear-gradient(180deg, #d7e6f4 0%, #c7dbef 45%, #c0d5ea 100%);
+    color: #1d2d50;
+}}
+
+div.block-container {{
+    padding-top: 10px;
+    padding-left: 26px;
+    padding-right: 26px;
+    max-width: 1200px;
+}}
+
+section[data-testid="stSidebar"] {{
+    background: #f4fbfa;
+    border-right: 1px solid var(--border);
+}}
+
+section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2 {{
+    color: var(--navy);
+}}
+
+section[data-testid="stSidebar"] .stTextInput > div > div > input,
+section[data-testid="stSidebar"] .stTextArea > div > textarea,
+section[data-testid="stSidebar"] .stSelectbox > div > div {{
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+}}
+
+.stButton>button, .stDownloadButton>button {{
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-weight: 600;
+    letter-spacing: 0.1px;
+    box-shadow: 0 8px 18px rgba(0, 150, 136, 0.28);
+}}
+
+.stButton>button:hover, .stDownloadButton>button:hover {{
+    background: var(--primary-dark);
+}}
+
+div[data-testid="stExpander"] {{
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 8px 16px rgba(12, 44, 106, 0.04);
+}}
+
+div[data-testid="stFileUploaderDropzone"] {{
+    border: 1.5px dashed var(--border);
+    background: #f7fbfc;
+    border-radius: 12px;
+}}
+
+div[data-testid="stMetricValue"] {{
+    color: var(--primary);
+}}
+
+div[data-testid="stDataFrame"] table thead tr th {{
+    background: #f3f7fb !important;
+    color: var(--navy);
+}}
+
+.hero {{
+    background: linear-gradient(120deg, var(--primary) 0%, #00a69c 60%, #00b3a4 100%);
+    color: #fff;
+    padding: 18px 22px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 138, 130, 0.26);
+}}
+
+.hero-title {{
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    margin: 0;
+}}
+
+.hero-sub {{
+    margin: 4px 0 0 0;
+    opacity: 0.92;
+    font-size: 15px;
+}}
+
+.top-logo {{
+    height: 54px;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 18px rgba(0,0,0,0.12));
+}}
+
+.badge {{
+    background: rgba(255, 255, 255, 0.14);
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+}}
+
+.card {{
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px 18px 24px 18px;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 20px rgba(12, 44, 106, 0.03);
+}}
+</style>
+"""
+
+
+def inject_theme() -> None:
+    """Apply corporate visual theme to the Streamlit app."""
+    st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+
+
+def load_logo() -> Path | None:
+    """Return the company logo path if available."""
+    logo_path = Path(__file__).resolve().parent.parent / "Sofgen-Pharma.png"
+    return logo_path if logo_path.exists() else None
+
+
+def render_hero_banner(title: str, subtitle: str) -> None:
+    """Render top hero with gradient background and corporate logo."""
+    logo_path = load_logo()
+    cols = st.columns([4, 1.2])
+    with cols[0]:
+        st.markdown(
+            f"""
+            <div class="hero">
+                <div class="hero-title">{title}</div>
+                <div class="hero-sub">{subtitle}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with cols[1]:
+        if logo_path:
+            st.image(str(logo_path), width=180, caption=None)
+        else:
+            st.markdown(
+                """
+                <div class="hero" style="display:flex;align-items:center;justify-content:center;min-height:68px;">
+                    <div class="badge">Logo pendiente</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
 
 def render_method_help(method_key: str) -> None:
@@ -345,4 +517,16 @@ def render_download_buttons(
         data=xlsx_bytes,
         file_name=xlsx_filename,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+
+# Running this module directly isn't the intended entry point.
+# Show a friendly message instead of a blank page if executed with `streamlit run ui/streamlit_app.py`.
+if __name__ == "__main__":
+    st.set_page_config(page_title="Comparación de perfiles de disolución", layout="wide")
+    inject_theme()
+    st.title("Usa main.py para ejecutar la app")
+    st.write(
+        "Este módulo solo define los componentes de UI. "
+        "Ejecuta `streamlit run main.py` para iniciar la aplicación completa."
     )

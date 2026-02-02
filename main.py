@@ -11,12 +11,48 @@ from typing import Dict
 # Import modular components
 from config.constants import METHODS, MODELS, ERROR_MESSAGES, DEFAULT_MEDIUM
 from data.processor import calculate_summary_stats
+# UI helpers live under ui/ for modular structure
 from ui.streamlit_app import (
-    render_method_help, render_f1_f2_results, render_multivariate_results,
-    render_model_dependent_results, render_data_tables, render_summary_table,
-    render_download_buttons
+    inject_theme,
+    load_logo,
+    render_hero_banner,
+    render_method_help,
+    render_f1_f2_results,
+    render_multivariate_results,
+    render_model_dependent_results,
+    render_data_tables,
+    render_summary_table,
+    render_download_buttons,
 )
 from agents.orchestrator import AgentOrchestrator
+
+
+def render_empty_state() -> None:
+    """Show a centered call-to-action when no files are loaded."""
+    c1, c2, c3 = st.columns([1.2, 1, 1.2])
+    with c2:
+        st.markdown(
+            """
+            <div style="
+                background: white;
+                border: 1px solid #d7e3ea;
+                border-radius: 14px;
+                padding: 20px 22px;
+                box-shadow: 0 10px 28px rgba(12,44,106,0.08);
+                text-align: center;
+            ">
+                <div style="font-size:42px; line-height:1;">📊</div>
+                <div style="font-size:18px; font-weight:600; margin-top:6px;">
+                    Carga tus archivos para comenzar
+                </div>
+                <div style="color:#42526e; margin-top:6px;">
+                    Sube Referencia y Prueba en el panel izquierdo, ingresa los datos de lote
+                    y luego elige el método para ejecutar el análisis.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 def render_sidebar_inputs() -> Dict[str, any]:
@@ -247,14 +283,24 @@ def run_analysis_traditional(inputs: Dict[str, any]) -> Dict[str, any]:
 
 def main() -> None:
     """Main application entry point."""
-    st.set_page_config(page_title="Comparación de perfiles de disolución", layout="wide")
-    st.title("Comparación de perfiles de disolución (FDA IR) + Reporte")
+    logo_path = load_logo()
+    st.set_page_config(
+        page_title="Comparación de perfiles de disolución",
+        layout="wide",
+        page_icon=str(logo_path) if logo_path else None,
+    )
+    inject_theme()
+    render_hero_banner(
+        "Comparación de perfiles de disolución",
+        "FDA IR · reporte ejecutivo y tablas descargables",
+    )
     
     # Get user inputs
     inputs = render_sidebar_inputs()
     
     # Validate inputs
     if not validate_inputs(inputs):
+        render_empty_state()
         return
     
     # Show method help if requested
